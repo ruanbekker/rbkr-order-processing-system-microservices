@@ -19,21 +19,30 @@ services:
       - KAFKA_CFG_PROCESS_ROLES=broker,controller  
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER  
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093 
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092  
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@localhost:9093 
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092  
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093 
       - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
     ports:
       - 9092:9092
     networks:
       - ops
 
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - 6379:6379
+    networks:
+      - ops
+
   order-service:
+    container_name: order-service
     build: ../rbkr-ops-order-service
     ports:
       - "8080:8080"
     environment:
       - DATABASE_URL=postgres://user:pass@postgres:5432/orders?sslmode=disable
-      - KAFKA_BROKERS=localhost:9092
+      - KAFKA_BROKERS=kafka:9092
       - PORT=8080
     depends_on:
       - postgres
@@ -41,20 +50,26 @@ services:
     networks:
       - ops
 
-  #inventory-service:
-  #  build: ../inventory-service
-  #  depends_on:
-  #    - redis
-  #    - kafka
-  #  networks:
-  #    - ops
+  inventory-service:
+    container_name: inventory-service
+    build: ../rbkr-ops-inventory-service
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      - redis
+      - kafka
+    networks:
+      - ops
 
-  #notification-service:
-  #  build: ../notification-service
-  #  depends_on:
-  #    - kafka
-  #  networks:
-  #    - ops
+  notification-service:
+    build: ../rbkr-ops-notification-service
+    environment:
+      - KAFKA_BROKERS=kafka:9092
+    depends_on:
+      - kafka
+    networks:
+      - ops
 
 networks:
   ops:
