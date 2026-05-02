@@ -4,15 +4,81 @@ Home Repository for Order Processing System (OPS)
 
 ## About
 
-OPS is a hobby project for my own experiments written in Go.
+A hobby-project for my own experiments, which is a simple event-driven microservices system built with Go, Kafka, Redis, and PostgreSQL.
 
-## Structure
+This project demonstrates how independent services communicate asynchronously using Kafka, while maintaining clear separation of concerns and scalability.
+
+## Repositories
 
 This is the home repository for the following services:
 
 - [rbkr-ops-order-service](https://github.com/ruanbekker/rbkr-ops-order-service)
 - [rbkr-ops-inventory-service](https://github.com/ruanbekker/rbkr-ops-inventory-service)
 - [rbkr-ops-notification-service](https://github.com/ruanbekker/rbkr-ops-notification-service)
+
+## Architecture
+
+```mermaid
+flowchart LR
+    A[Client] -->|POST /orders| B[Order Service]
+
+    B -->|Write| C[(PostgreSQL)]
+    B -->|Publish order_created| D[Kafka]
+
+    D -->|Consume| E[Inventory Service]
+    E -->|Check & Update| F[(Redis)]
+
+    E -->|Publish order_reserved / order_failed| D
+
+    D -->|Consume| G[Notification Service]
+    G -->|Log / Notify| H[User]
+```
+
+## How it works
+
+1. A client creates an order via the Order Service
+
+2. The Order Service:
+   - Stores the order in PostgreSQL
+   - Publishes an `order_created` event to Kafka
+
+3. The Inventory Service:
+   - Consumes `order_created`
+   - Checks stock in Redis
+   - Publishes:
+     - `order_reserved` if stock is available
+     - `order_failed` if not
+
+4. The Notification Service:
+   - Consumes the result event
+   - Logs or sends a notification
+
+## Services
+
+### Order Service
+
+- REST API (`POST /orders`)
+- Stores orders in PostgreSQL
+- Produces `order_created` events
+
+### Inventory Service
+
+- Consumes `order_created`
+- Uses Redis for stock management
+- Produces `order_reserved` / `order_failed`
+
+### Notification Service
+
+- Consumes result events
+- Logs notifications (simulated)
+
+## Tech Stack
+
+- Go (Golang)
+- Kafka (event streaming)
+- Redis (real-time state / inventory)
+- PostgreSQL (persistent storage)
+- Docker & Docker Compose
 
 ## This repo
 
