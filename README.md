@@ -80,6 +80,30 @@ flowchart LR
 - PostgreSQL (persistent storage)
 - Docker & Docker Compose
 
+## Observability (Prometheus Metrics)
+
+Each service exposes Prometheus metrics via a `/metrics` endpoint.
+
+### Core Metrics
+
+| Metric | Description |
+|------|-------------|
+| `orders_created_total` | Total number of orders created via the Order Service |
+| `inventory_orders_total{status}` | Total number of inventory events processed by status (`processed`, `reserved`, `failed`) |
+| `notifications_sent_total` | Total number of notifications handled by the Notification Service |
+
+### Example Metrics Output
+
+```text
+orders_created_total 5
+
+inventory_orders_total{status="processed"} 5
+inventory_orders_total{status="reserved"} 4
+inventory_orders_total{status="failed"} 1
+
+notifications_sent_total 5
+```
+
 ## This repo
 
 - Documentation (architecture, diagrams, flow)
