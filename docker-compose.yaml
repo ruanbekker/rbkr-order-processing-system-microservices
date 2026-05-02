@@ -35,9 +35,20 @@ services:
     networks:
       - ops
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - ops
+
   order-service:
     container_name: order-service
     build: ../rbkr-ops-order-service
+    restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
@@ -56,6 +67,8 @@ services:
     environment:
       - KAFKA_BROKERS=kafka:9092
       - REDIS_ADDR=redis:6379
+    ports:
+      - 2112:2112
     depends_on:
       - redis
       - kafka
@@ -66,6 +79,8 @@ services:
     build: ../rbkr-ops-notification-service
     environment:
       - KAFKA_BROKERS=kafka:9092
+    ports:
+      - 2113:2112
     depends_on:
       - kafka
     networks:
