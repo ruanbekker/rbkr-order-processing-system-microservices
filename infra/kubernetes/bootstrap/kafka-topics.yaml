@@ -15,7 +15,7 @@ spec:
             - |
               echo "Waiting for Kafka..."
 
-              # 🔥 wait until Kafka is reachable
+              # wait until kafka is reachable
               until kafka-topics.sh --list --bootstrap-server kafka:9092 >/dev/null 2>&1; do
                 echo "Kafka not ready yet..."
                 sleep 3
