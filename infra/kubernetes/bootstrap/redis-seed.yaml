@@ -1,0 +1,27 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: redis-seed
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: redis-seed
+          image: redis:7
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for Redis..."
+
+              # wait until Redis is ready
+              until redis-cli -h redis ping | grep PONG; do
+                echo "Redis not ready..."
+                sleep 2
+              done
+
+              echo "Seeding Redis..."
+              redis-cli -h redis SET books 100
+              echo "Done"

@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-migrate
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migrate
+          image: ttl.sh/rbkr-ops-migrations:2h
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Waiting for Postgres..."
+
+              until nc -z postgres 5432; do
+                echo "Postgres not ready..."
+                sleep 2
+              done
+
+              echo "Running migrations..."
+
+              migrate -path /migrations \
+                -database "postgres://user:pass@postgres:5432/orders?sslmode=disable" \
+                up
