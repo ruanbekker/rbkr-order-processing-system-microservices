@@ -5,6 +5,14 @@
 COMPOSE=docker compose
 K6_SCRIPT=k6/order-test.js
 K6_KUBERNETES_SCRIPT=k6/kubernetes-order-test.js
+KIND_CLUSTER_NAME := microservices
+
+# ---------
+# Tilt.dev
+# ---------
+
+dev: kind-ensure
+	tilt up
 
 # -------------------------------
 # Docker
@@ -32,6 +40,21 @@ build-push:
 # -------------------------------
 # Kubernetes
 # -------------------------------
+kind-ensure:
+	@echo "🔍 Checking for KinD cluster..."
+	@if kind get clusters | grep -q "^$(KIND_CLUSTER_NAME)$$"; then \
+		echo "✅ KinD cluster '$(KIND_CLUSTER_NAME)' already exists"; \
+	else \
+		echo "🚀 Creating KinD cluster '$(KIND_CLUSTER_NAME)'..."; \
+		kind create cluster --name $(KIND_CLUSTER_NAME) --config configs/kind-config.yaml; \
+		echo "📦 Installing ingress..."; \
+		$(MAKE) ingress-install; \
+		echo "⏳ Waiting 10 seconds for ingress to initialize..."; \
+		sleep 10; \
+		echo "⏱ Waiting for ingress controller to be ready..."; \
+		$(MAKE) ingress-wait; \
+	fi
+
 kind-create:
 	kind create cluster --name microservices --config configs/kind-config.yaml
 
@@ -98,6 +121,7 @@ help:
 	@echo "Available commands:"
 	@echo "  make up                   - Start all services"
 	@echo "  make down                 - Stop all services"
+	@echo "  make dev                  - Start dev env with Tilt"
 	@echo "  make logs                 - View logs"
 	@echo "  make load-test            - Run k6 load test"
 	@echo "  make load-test-kubernetes - Run k6 load test on kubernetes"
