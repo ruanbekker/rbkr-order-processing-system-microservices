@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: order-service
-          image: ttl.sh/rbkr-ops-order-service:2h
+          image: ttl.sh/rbkr-ops-order-service-dev:2h
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
