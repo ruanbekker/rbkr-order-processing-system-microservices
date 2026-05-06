@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: inventory-service
-          image: ttl.sh/rbkr-ops-inventory-service:2h
+          image: ttl.sh/rbkr-ops-inventory-service-dev:2h
           env:
             - name: KAFKA_BROKERS
               value: kafka:9092
